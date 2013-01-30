@@ -1,9 +1,0 @@
-class GemBoard
-  BOARD_WIDTH = 10
-  BOARD_HEIGHT = 10
-
-  def initialize
-    @board = []
-    @gem_list = []   
-  end
-end
