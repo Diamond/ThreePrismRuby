@@ -1,10 +1,6 @@
-require "Rubygame"
-
-class GameObject
-  attr_accessor :x, :y, :width, :height, :image
-
+class GameGem
   def initialize(color="black.png", x=0, y=0)
-    @image  = Surface.load color + ".png"
+    @image  = Surface.load color.to_s + ".png"
     @x      = x
     @y      = y
     @width  = @image.width
@@ -14,8 +10,8 @@ class GameObject
   def update
   end
 
-  def draw(surface)
-    @image.blit surface, [@x, @y]
+  def draw(surface, x=nil, y=nil)
+    @image.blit surface, [x||@x, y||@y]
   end
 
   def handle_event(event)
