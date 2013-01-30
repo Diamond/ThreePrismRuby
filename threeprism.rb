@@ -46,7 +46,7 @@ class GemBoard
     @selected   = false
     @selectedX  = 0
     @selectedY  = 0
-    @cursor     = nil
+    @cursor     = Surface.load "selected.png"
 
     @tempScore  = 0
     @score      = 0
@@ -102,7 +102,7 @@ class GemBoard
   def generateBoard
     for y in 0..BOARD_HEIGHT
       for x in 0..BOARD_WIDTH
-        @board[y][x] = rand(1..7)
+        @board[y][x] = rand(1..7) if @board[y][x] == 0
       end
     end
   end
@@ -129,6 +129,7 @@ class GemBoard
     end
     if @selected
       # Draw cursor here
+      @cursor.blit surface, [@selectedX * 64, @selectedY * 64]
     end
   end
 
@@ -198,6 +199,89 @@ class GemBoard
   def select(x, y)
     @selectedX = (x / 64).floor
     @selectedY = (y / 64).floor
+  end
+
+  def checkForMatches(x, y, gem)
+    matches = 1
+    if northMatch x, y, gem
+      ny = y - 1
+      matches += allMatch(x, ny, gem, :south) + 1
+    end
+    if southMatch x, y, gem
+      ny = y + 1
+      matches += allMatch(x, ny, gem, :north) + 1
+    end
+    if westMatch x, y, gem
+      nx = x - 1
+      matches += allMatch(nx, y, gem, :east) + 1
+    end
+    if eastMatch x, y, gem
+      nx = x + 1
+      matches += allMatch(nx, y, gem, :west) + 1
+    end
+    matches
+  end
+  
+  def northMatch(x, y, gem)
+    y > 0 and @board[y-1][x] == gem
+  end
+
+  def southMatch(x, y, gem)
+    y < BOARD_HEIGHT - 1 and @board[y+1][x] == gem
+  end
+
+  def eastMatch(x, y, gem)
+    x < BOARD_WIDTH - 1 and @board[y][x+1] == gem
+  end
+
+  def westMatch(x, y, gem)
+    x > 0 and @board[y][x-1] == gem
+  end
+
+  def allMatch(x, y, gem, exclude=:none)
+    matches = 0
+    matches += 1 unless exclude == :north or northMatch(x, y, gem)
+    matches += 1 unless exclude == :south or southMatch(x, y, gem)
+    matches += 1 unless exclude == :east or eastMatch(x, y, gem)
+    matches += 1 unless exclude == :west or westMatch(x, y, gem)
+    matches
+  end
+
+  def swap(x1, y1, x2, y2)
+    temp1 = @board[y1][x1]
+    temp2 = @board[y2][x2]
+    @board[y1][x1] = temp2
+    @board[y2][x2] = temp1
+    matches = [checkForMatches(x2, y2, @board[y2][x2]), checkForMatches(x1, y1, @board[y1][x1])].max
+    if matches < 3
+      @board[y1][x1] = temp1
+      @board[y2][x2] = temp2
+    else
+      beginMatchSearch
+      gravity
+    end
+  end
+
+  def fakeSwap(x1, y1, x2, y2)
+    temp1 = @board[y1][x1]
+    temp2 = @board[y2][x2]
+    @board[y1][x1] = temp2
+    @board[y2][x2] = temp1
+    matches = [checkForMatches(x2, y2, @board[y2][x2]), checkForMatches(x1, y1, @board[y1][x1])].max
+    @board[y1][x1] = temp1
+    @board[y2][x2] = temp2
+    matches >= 3
+  end
+
+  def validMovesRemaining
+    for y in 1...(BOARD_HEIGHT-1)
+      for x in 1...(BOARD_WIDTH-1)
+        return true if fakeSwap x, y, x, y-1
+        return true if fakeSwap x, y, x, y+1
+        return true if fakeSwap x, y, x-1, y
+        return true if fakeSwap x, y, x+1, y
+      end
+    end
   end
 end
 
