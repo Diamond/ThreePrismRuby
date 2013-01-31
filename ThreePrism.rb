@@ -2,16 +2,18 @@
 
 require "rubygems"
 require "rubygame"
+Rubygame::TTF.setup
 
 include Rubygame
 
 # ThreePrism includes
 require_relative "GameGem"
 require_relative "GemBoard"
+require_relative "Gui"
 
 class ThreePrism
   def initialize
-    @screen = Rubygame::Screen.new [640, 640], 0, [Rubygame::HWSURFACE, Rubygame::DOUBLEBUF]
+    @screen = Rubygame::Screen.new [640, 704], 0, [Rubygame::HWSURFACE, Rubygame::DOUBLEBUF]
     @screen.title = "threeprism"
 
     @queue = Rubygame::EventQueue.new
@@ -19,6 +21,9 @@ class ThreePrism
     @clock.target_framerate = 60
 
     @board = GemBoard.new
+    @gui   = Gui.new
+    @background = Rubygame::Surface.new [640, 704]
+    @background.fill [0, 0, 0]
   end
 
   def run!
@@ -30,6 +35,7 @@ class ThreePrism
   end
 
   def update
+    @board.update
     @queue.each do |ev|
       case ev
         when Rubygame::MouseDownEvent
@@ -45,7 +51,9 @@ class ThreePrism
 
   def draw
     @screen.fill [0, 0, 0]
+    @background.blit @screen, [0, 0]
     @board.draw @screen
+    @gui.draw @screen, @board.score
     @screen.flip
   end
 end
